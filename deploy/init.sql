@@ -11,6 +11,9 @@ CREATE DATABASE IF NOT EXISTS `campus_trade`
 
 USE `campus_trade`;
 
+-- 确保客户端连接使用 utf8mb4，防止中文乱码
+SET NAMES utf8mb4;
+
 -- ============================================
 -- 一、用户相关表
 -- ============================================
