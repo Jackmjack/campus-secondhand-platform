@@ -54,6 +54,7 @@ CREATE TABLE `user_credit` (
     `good_reviews`     INT          NOT NULL DEFAULT 0 COMMENT '好评数（4-5星）',
     `completed_orders` INT          NOT NULL DEFAULT 0 COMMENT '完成交易数',
     `cancelled_orders` INT          NOT NULL DEFAULT 0 COMMENT '取消交易数',
+    `version`          INT          NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     `updated_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_user_credit_user_id` (`user_id`)
@@ -108,6 +109,7 @@ CREATE TABLE `product` (
     `view_count`       INT            NOT NULL DEFAULT 0 COMMENT '浏览次数',
     `favorite_count`   INT            NOT NULL DEFAULT 0 COMMENT '收藏次数',
     `meet_location`    VARCHAR(200)   DEFAULT NULL COMMENT '期望面交地点',
+    `version`          INT            NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     `created_at`       DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`       DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `is_deleted`       TINYINT(1)     NOT NULL DEFAULT 0,
@@ -136,8 +138,8 @@ CREATE TABLE `product_image` (
 -- 三、交易相关表
 -- ============================================
 
--- 7. 订单表
-CREATE TABLE `order` (
+-- 7. 交易订单表
+CREATE TABLE `trade_order` (
     `id`                 BIGINT        NOT NULL AUTO_INCREMENT COMMENT '订单ID',
     `product_id`         BIGINT        NOT NULL COMMENT '商品ID',
     `buyer_id`           BIGINT        NOT NULL COMMENT '买家用户ID',
@@ -150,6 +152,7 @@ CREATE TABLE `order` (
     `seller_confirm_at`  DATETIME      DEFAULT NULL COMMENT '卖家确认完成时间',
     `cancel_reason`      VARCHAR(500)  DEFAULT NULL COMMENT '取消原因',
     `cancelled_by`       BIGINT        DEFAULT NULL COMMENT '取消操作人用户ID',
+    `version`            INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     `created_at`         DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`         DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `is_deleted`         TINYINT(1)    NOT NULL DEFAULT 0,
@@ -159,7 +162,7 @@ CREATE TABLE `order` (
     KEY `idx_order_seller_id` (`seller_id`),
     KEY `idx_order_status` (`status`),
     KEY `idx_order_created_at` (`created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='交易订单表';
 
 -- 8. 协商记录表
 CREATE TABLE `negotiation` (
@@ -207,7 +210,8 @@ CREATE TABLE `favorite` (
 -- 四、AI推荐相关表
 -- ============================================
 
--- 11. 用户行为埋点表（AI推荐训练数据）
+-- 11. 用户行为埋点表（AI推荐训练数据，基于 ShardingSphere-JDBC 水平分表）
+-- 分表说明：物理上拆分为 user_behavior_0 ~ user_behavior_3，ShardingKey=user_id，路由算法 user_id % 4
 CREATE TABLE `user_behavior` (
     `id`             BIGINT       NOT NULL AUTO_INCREMENT COMMENT '行为ID',
     `user_id`        BIGINT       NOT NULL COMMENT '用户ID',
@@ -287,6 +291,7 @@ CREATE TABLE `rental_product` (
     `status`           VARCHAR(20)    NOT NULL DEFAULT 'AVAILABLE' COMMENT 'AVAILABLE可租 RENTED已租出 OFFLINE已下架',
     `view_count`       INT            NOT NULL DEFAULT 0,
     `rent_count`       INT            NOT NULL DEFAULT 0 COMMENT '累计出租次数',
+    `version`          INT            NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     `created_at`       DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`       DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `is_deleted`       TINYINT(1)     NOT NULL DEFAULT 0,
@@ -454,6 +459,7 @@ CREATE TABLE `card_share` (
     `cost_per_person` DECIMAL(10,2) NOT NULL COMMENT '人均分摊费用',
     `current_members` INT           NOT NULL DEFAULT 1 COMMENT '当前参与人数',
     `status`         VARCHAR(20)    NOT NULL DEFAULT 'ACTIVE' COMMENT 'ACTIVE拼卡中 FULL已满员 COMPLETED已完成 CANCELLED已取消',
+    `version`        INT            NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     `created_at`     DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`     DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `is_deleted`     TINYINT(1)     NOT NULL DEFAULT 0,

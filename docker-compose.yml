@@ -1,9 +1,8 @@
-version: '3.8'
-
 services:
   mysql:
     image: mysql:8.0
     container_name: campus-mysql
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root123456
       MYSQL_DATABASE: campus_trade
@@ -23,6 +22,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: campus-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
@@ -32,11 +32,10 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
 
-<<<<<<< HEAD
-=======
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
     container_name: campus-rabbitmq
+    restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: campus
       RABBITMQ_DEFAULT_PASS: campus123
@@ -50,8 +49,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
->>>>>>> c72b60292feb2d2dd8b91ea86a37bc598ff186b1
   # AI推荐服务（Python Flask）
   recommend:
     build: ./apps/recommend
@@ -84,8 +81,5 @@ services:
 volumes:
   mysql-data:
   redis-data:
-<<<<<<< HEAD
-=======
   rabbitmq-data:
->>>>>>> c72b60292feb2d2dd8b91ea86a37bc598ff186b1
   es-data:
